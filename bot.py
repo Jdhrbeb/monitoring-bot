@@ -241,20 +241,17 @@ async def monitor_message(message: Message):
                 text,
                 "bad"
             )
+            print("BAN BAJARILDI")
 
-            risk = database.get_risk_score()
-
-            await message.reply(
-                "⚠️ Ogohlantirish!\n\n"
-                "Xabaringizda nomaqbul so‘z aniqlandi."
+            await bot.ban_chat_member(
+                chat_id=message.chat.id,
+                user_id=message.from_user.id
             )
+            print("BAN BAJARILDI")
 
-            if risk >= 70:
-                await message.answer(
-                    "🚨 Tizim ogohlantirishi\n\n"
-                    f"Risk Score: {risk}%\n\n"
-                    "Guruhda salbiy kontentlar soni ortmoqda."
-                )
+            await message.answer(
+                f"⛔ {message.from_user.full_name} nomaqbul so‘z ishlatgani uchun guruhdan chiqarildi."
+            )
 
             return
 
@@ -264,20 +261,11 @@ async def monitor_message(message: Message):
         "normal"
     )
 
-    risk = database.get_risk_score()
 
-    if risk >= 70:
-        await message.answer(
-            "🚨 Tizim ogohlantirishi\n\n"
-            f"Risk Score: {risk}%\n\n"
-            "Guruhda salbiy kontentlar soni ortmoqda."
-        )
-
-async def  main():
+async def main():
     print("Bot ishga tushdi...")
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-
