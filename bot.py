@@ -17,13 +17,12 @@ ADMIN_ID = 6997621411
 def is_admin(user_id):
     return user_id == ADMIN_ID
 
-BAD_WORDS = [
-    "ahmoq",
-    "tentak",
-    "iflos",
-    "la'nati",
-    "haqorat"
-]
+with open("bad_words.txt", "r", encoding="utf-8") as file:
+    BAD_WORDS = [
+        line.strip().lower()
+        for line in file
+        if line.strip()
+    ]
 
 
 @dp.message(Command("stats"))
@@ -156,6 +155,75 @@ async def export_command(message: Message):
         caption="📊 Monitoring hisoboti"
     )
 
+@dp.message(Command("addword"))
+async def add_word(message: Message):
+
+    if not is_admin(message.from_user.id):
+        await message.answer(
+            "⛔ Sizda ushbu buyruqni ishlatish huquqi yo‘q."
+        )
+        return
+
+    parts = message.text.split(maxsplit=1)
+
+    if len(parts) < 2:
+        await message.answer(
+            "Foydalanish:\n/addword so'z"
+        )
+        return
+
+    new_word = parts[1].strip().lower()
+
+    with open("bad_words.txt", "a", encoding="utf-8") as file:
+        file.write(f"\n{new_word}")
+
+    BAD_WORDS.append(new_word)
+
+    await message.answer(
+        f"✅ '{new_word}' so‘zi qo‘shildi."
+    )
+
+@dp.message(Command("delword"))
+async def delete_word(message: Message):
+
+    if not is_admin(message.from_user.id):
+        await message.answer(
+            "⛔ Sizda ushbu buyruqni ishlatish huquqi yo‘q."
+        )
+        return
+
+    parts = message.text.split(maxsplit=1)
+
+    if len(parts) < 2:
+        await message.answer(
+            "Foydalanish:\n/delword so'z"
+        )
+        return
+
+    word = parts[1].strip().lower()
+
+    if word not in BAD_WORDS:
+        await message.answer(
+            "❌ Bu so‘z bazada topilmadi."
+        )
+        return
+
+    BAD_WORDS.remove(word)
+
+    with open("bad_words.txt", "w", encoding="utf-8") as file:
+        for item in BAD_WORDS:
+            file.write(item + "\n")
+
+    await message.answer(
+        f"🗑 '{word}' so‘zi o‘chirildi."
+    )
+    
+@dp.message(Command("myid"))
+async def my_id(message: Message):
+    await message.answer(
+        f"Sizning ID: {message.from_user.id}"
+    )
+
 @dp.message()
 async def monitor_message(message: Message):
 
@@ -204,7 +272,8 @@ async def monitor_message(message: Message):
             f"Risk Score: {risk}%\n\n"
             "Guruhda salbiy kontentlar soni ortmoqda."
         )
-async def main():
+
+async def  main():
     print("Bot ishga tushdi...")
     await dp.start_polling(bot)
 
@@ -212,8 +281,3 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 
-@dp.message(Command("myid"))
-async def my_id(message: Message):
-    await message.answer(
-        f"Sizning ID: {message.from_user.id}"
-    )
